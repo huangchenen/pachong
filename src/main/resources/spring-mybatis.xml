@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"  
+	xmlns:jee="http://www.springframework.org/schema/jee" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+
+
+	<context:component-scan base-package="com"></context:component-scan>
+
+
+	<!--<util:properties id="config" location="classpath:config.properties"></util:properties>-->
+	<context:property-placeholder  location="classpath:*.properties"/>
+	<!-- 配置mybatis -->
+	<!--<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<property name="url" value="jdbc:mysql://localhost:3306/mini"/>
+		<property name="username" value="root"/>
+		<property name="password" value="123654"/>
+	</bean>-->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		  init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="${jdbc.initialSize}" />
+		<property name="minIdle" value="${jdbc.minIdle}" />
+		<property name="maxActive" value="${jdbc.maxActive}" />
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="${jdbc.maxWait}" />
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<!--<property name="timeBetweenEvictionRunsMillis" value="60000" />-->
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="${jdbc.minEvictableIdleTimeMillis}" />
+		<property name="testWhileIdle" value="true" />
+		<!-- 这里建议配置为TRUE，防止取到的连接不可用 -->
+		<property name="testOnBorrow" value="true" />
+		<property name="testOnReturn" value="false" />
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<!--<property name="poolPreparedStatements" value="true" />
+		<property name="maxPoolPreparedStatementPerConnectionSize" value="20" />-->
+		<!-- 这里配置提交方式，默认就是TRUE，可以不用配置 -->
+		<!--<property name="defaultAutoCommit" value="true" />-->
+	</bean>
+
+
+	<!-- 配置sqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!--指定注入连接 -->
+		<property name="dataSource" ref="dataSource"></property>
+		<!--指定映射文件 src/main/resource/mappers/下面的-->
+		<property name="mapperLocations" value="classpath*:mappers/*/*.xml"></property>
+	</bean>
+	<!-- 配置映射器 -->
+	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 理论上当只有一个数据库时，不需要配置，但是多个数据库时，需要指定 -->
+		<!--<property name="sqlSessionFactory" ref="sqlSessionFactory"></property>-->
+		<!-- 指定映射器 -->
+		<property name="basePackage" value="com.dao"></property>
+	</bean>
+
+	
+	<!-- 配置Spring-JDBC中的数据源事务管理  该类在datasource包中-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<!-- 声明：可以使用注解式事务处理了 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+
+</beans>
